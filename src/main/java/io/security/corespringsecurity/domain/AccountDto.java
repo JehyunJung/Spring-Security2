@@ -12,4 +12,9 @@ public class AccountDto {
     private String email;
     private int age;
     private String role;
+
+    public AccountDto(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
 }
