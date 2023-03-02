@@ -3,6 +3,7 @@ package io.security.corespringsecurity.security.configs;
 import io.security.corespringsecurity.repository.UserRepository;
 import io.security.corespringsecurity.security.filter.AjaxLoginProcessingFilter;
 import io.security.corespringsecurity.security.handler.CustomAccessDeniedHandler;
+import io.security.corespringsecurity.security.handler.CustomAuthenticationFailureHandler;
 import io.security.corespringsecurity.security.handler.CustomAuthenticationSuccessHandler;
 import io.security.corespringsecurity.security.provider.AjaxAuthenticationProvider;
 import io.security.corespringsecurity.security.provider.CustomAuthenticationProvider;
@@ -43,24 +44,17 @@ import org.springframework.security.web.util.matcher.RequestHeaderRequestMatcher
 @Slf4j
 public class SecurityConfig{
     private final AuthenticationDetailsSource authenticationDetailsSource;
-    private final AuthenticationSuccessHandler authenticationSuccessHandler;
-    private final AuthenticationFailureHandler authenticationFailureHandler;
     private final UserDetailsService customUserDetailsService;
 
+    private final CustomAuthenticationProvider customAuthenticationProvider;
+    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 
-    @Bean
-    public PasswordEncoder passwordEncoder(){
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-    }
-    @Bean
-    public CustomAuthenticationProvider customAuthenticationProvider(){
-        return new CustomAuthenticationProvider(customUserDetailsService,passwordEncoder());
-    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfiguration) throws Exception {
         ProviderManager authenticationManager = (ProviderManager)authConfiguration.getAuthenticationManager();
-        authenticationManager.getProviders().add(0, customAuthenticationProvider());
+        authenticationManager.getProviders().add(0, customAuthenticationProvider);
         return authConfiguration.getAuthenticationManager();
     }
 
@@ -81,7 +75,7 @@ public class SecurityConfig{
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
         httpSecurity
                 .authorizeHttpRequests()
-                .requestMatchers("/","/users","/login*").permitAll()
+                .requestMatchers("/","/users","/login*","/error","/denied*").permitAll()
                 .requestMatchers("/mypage").hasRole("USER")
                 .requestMatchers("/messages").hasRole("MANAGER")
                 .requestMatchers("/config").hasRole("ADMIN")
@@ -93,8 +87,8 @@ public class SecurityConfig{
                 .loginProcessingUrl("/login_proc")
                 .authenticationDetailsSource(authenticationDetailsSource)
                 .defaultSuccessUrl("/")
-                .successHandler(authenticationSuccessHandler)
-                .failureHandler(authenticationFailureHandler)
+                .successHandler(customAuthenticationSuccessHandler)
+                .failureHandler(customAuthenticationFailureHandler)
                 .permitAll();
         httpSecurity.exceptionHandling()
                 .accessDeniedHandler(accessDeniedHandler());

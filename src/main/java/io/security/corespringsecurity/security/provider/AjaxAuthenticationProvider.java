@@ -31,13 +31,6 @@ public class AjaxAuthenticationProvider implements AuthenticationProvider {
         if(userDetails == null|| !passwordEncoder.matches(passWord,userDetails.getPassword())){
             throw new BadCredentialsException("BadCredentialException");
         }
-
-        FormWebAuthenticationDetails details = (FormWebAuthenticationDetails)authentication.getDetails();
-        String secretKey = details.getSecretKey();
-
-        if(secretKey == null || !secretKey.equals("secret")){
-            throw new InsufficientAuthenticationException("secret key error");
-        }
         return new AjaxAuthenticationToken(userDetails.getAccount(), null, userDetails.getAuthorities());
     }
 
