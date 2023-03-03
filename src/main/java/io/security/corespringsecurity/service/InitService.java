@@ -1,13 +1,10 @@
 package io.security.corespringsecurity.service;
 
-import io.security.corespringsecurity.domain.AccountDto;
+import io.security.corespringsecurity.domain.entity.Role;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -15,17 +12,25 @@ import java.util.List;
 public class InitService {
     private final UserService userService;
 
+    private final RoleService roleService;
+
+
+
     @PostConstruct
     @Transactional
-    void init() {
-        List<AccountDto> accountDtos = new ArrayList<>();
+   void init() {
+        /*List<Account> accounts = new ArrayList<>();
 
-        accountDtos.add(new AccountDto("user","1111","user@email.com",20,"ROLE_USER"));
-        accountDtos.add(new AccountDto("manager","1111","manager@email.com",25,"ROLE_MANAGER"));
-        accountDtos.add(new AccountDto("admin","1111","admin@email.com",34,"ROLE_ADMIN"));
+        accounts.add(new Account("user","1111","user@email.com",20,new HashSet<>(Arrays.asList(Role.))));
+        accounts.add(new Account("manager","1111","manager@email.com",25,"ROLE_MANAGER"));
+        accounts.add(new Account("admin","1111","admin@email.com",34,"ROLE_ADMIN"));
 
         for(AccountDto accountDto: accountDtos){
             userService.createUser(accountDto);
-        }
+        }*/
+        Role role = new Role();
+        role.setRoleName("ROLE_USER");
+        role.setRoleDesc("유저");
+        roleService.createRole(role);
     }
 }

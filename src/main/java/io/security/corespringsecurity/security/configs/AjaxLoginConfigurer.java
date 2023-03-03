@@ -1,8 +1,6 @@
 package io.security.corespringsecurity.security.configs;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.security.corespringsecurity.security.filter.AjaxLoginProcessingFilter;
-import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
@@ -14,12 +12,12 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
-public class AjaxLoginConfigurer<H extends HttpSecurityBuilder<H>> extends AbstractAuthenticationFilterConfigurer<H,AjaxLoginConfigurer<H>, AjaxLoginProcessingFilter> {
+public final class AjaxLoginConfigurer<H extends HttpSecurityBuilder<H>> extends
+        AbstractAuthenticationFilterConfigurer<H, AjaxLoginConfigurer<H>, AjaxLoginProcessingFilter> {
+
     private AuthenticationSuccessHandler successHandler;
     private AuthenticationFailureHandler failureHandler;
     private AuthenticationManager authenticationManager;
-
-    private AuthenticationDetailsSource authencationDetailsSource;
 
     public AjaxLoginConfigurer() {
         super(new AjaxLoginProcessingFilter(), null);
@@ -39,7 +37,6 @@ public class AjaxLoginConfigurer<H extends HttpSecurityBuilder<H>> extends Abstr
         getAuthenticationFilter().setAuthenticationManager(authenticationManager);
         getAuthenticationFilter().setAuthenticationSuccessHandler(successHandler);
         getAuthenticationFilter().setAuthenticationFailureHandler(failureHandler);
-        getAuthenticationFilter().setAuthenticationDetailsSource(authencationDetailsSource);
 
         SessionAuthenticationStrategy sessionAuthenticationStrategy = http
                 .getSharedObject(SessionAuthenticationStrategy.class);
@@ -70,13 +67,9 @@ public class AjaxLoginConfigurer<H extends HttpSecurityBuilder<H>> extends Abstr
         return this;
     }
 
-    public AjaxLoginConfigurer<H> setAuthenticationDetailsSource(AuthenticationDetailsSource authenticationDetailsSource) {
-        this.authencationDetailsSource = authenticationDetailsSource;
-        return this;
-    }
-
     @Override
     protected RequestMatcher createLoginProcessingUrlMatcher(String loginProcessingUrl) {
         return new AntPathRequestMatcher(loginProcessingUrl, "POST");
     }
+
 }

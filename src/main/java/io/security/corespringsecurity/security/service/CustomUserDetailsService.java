@@ -1,6 +1,6 @@
 package io.security.corespringsecurity.security.service;
 
-import io.security.corespringsecurity.domain.Account;
+import io.security.corespringsecurity.domain.entity.Account;
 import io.security.corespringsecurity.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,9 +10,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,10 +25,14 @@ public class CustomUserDetailsService implements UserDetailsService {
         if (account == null) {
             throw new UsernameNotFoundException("UsernameNotFoundException");
         }
-        List<GrantedAuthority> roles = new ArrayList<>();
-        roles.add(new SimpleGrantedAuthority((account.getRole())));
 
-        AccountContext accountContext = new AccountContext(account, roles);
+        List<GrantedAuthority> collect = account.getUserRoles()
+                .stream()
+                .map(userRole -> userRole.getRoleName())
+                .collect(Collectors.toSet())
+                .stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+
+        AccountContext accountContext = new AccountContext(account, collect);
 
         return accountContext;
     }
