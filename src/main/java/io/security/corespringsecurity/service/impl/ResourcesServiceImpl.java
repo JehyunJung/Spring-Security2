@@ -14,16 +14,15 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ResourcesServiceImpl implements ResourcesService {
 
     private final ResourcesRepository ResourcesRepository;
 
-    @Transactional
     public Resources getResources(long id) {
         return ResourcesRepository.findById(id).orElse(new Resources());
     }
 
-    @Transactional
     public List<Resources> getResources() {
         return ResourcesRepository.findAll(Sort.by(Sort.Order.asc("orderNum")));
     }

@@ -7,8 +7,9 @@ import io.security.corespringsecurity.domain.entity.Role;
 import io.security.corespringsecurity.repository.RoleRepository;
 import io.security.corespringsecurity.service.ResourcesService;
 import io.security.corespringsecurity.service.RoleService;
+import io.security.corespringsecurity.service.SecurityResourceService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,16 +21,16 @@ import java.util.List;
 import java.util.Set;
 
 @Controller
+@RequiredArgsConstructor
 public class ResourcesController {
-	
-	@Autowired
-	private ResourcesService resourcesService;
+	private final ResourcesService resourcesService;
 
-	@Autowired
-	private RoleRepository roleRepository;
+	private final RoleRepository roleRepository;
 
-	@Autowired
-	private RoleService roleService;
+	private final RoleService roleService;
+
+	private final SecurityResourceService securityResourceService;
+
 
 	@GetMapping(value="/admin/resources")
 	public String getResources(Model model) throws Exception {
@@ -51,6 +52,7 @@ public class ResourcesController {
 		resources.setRoleSet(roles);
 
 		resourcesService.createResources(resources);
+		securityResourceService.load();
 
 		return "redirect:/admin/resources";
 	}
@@ -89,7 +91,7 @@ public class ResourcesController {
 
 		Resources resources = resourcesService.getResources(Long.valueOf(id));
 		resourcesService.deleteResources(Long.valueOf(id));
-
+		securityResourceService.load();
 		return "redirect:/admin/resources";
 	}
 }
