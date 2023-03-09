@@ -32,15 +32,6 @@ public class Account implements Serializable {
     @Column
     private int age;
 
-
-    public Account(String username, String password, String email, int age, Set<Role> userRoles) {
-        this.username = username;
-        this.password = password;
-        this.email = email;
-        this.age = age;
-        this.userRoles = userRoles;
-    }
-
     @ManyToMany(fetch = FetchType.LAZY, cascade={CascadeType.ALL})
     @JoinTable(name = "account_roles", joinColumns = { @JoinColumn(name = "account_id") }, inverseJoinColumns = {
             @JoinColumn(name = "role_id") })
