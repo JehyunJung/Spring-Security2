@@ -13,16 +13,15 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
 
-    @Transactional
     public Role getRole(long id) {
         return roleRepository.findById(id).orElse(new Role());
     }
 
-    @Transactional
     public List<Role> getRoles() {
 
         return roleRepository.findAll();
