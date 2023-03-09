@@ -1,24 +1,37 @@
 package io.security.corespringsecurity.security.configs;
 
 import io.security.corespringsecurity.security.common.FormAuthenticationDetailsSource;
+import io.security.corespringsecurity.security.filter.CustomAuthorizationFilter;
 import io.security.corespringsecurity.security.handler.FormAccessDeniedHandler;
 import io.security.corespringsecurity.security.handler.FormAuthenticationFailureHandler;
 import io.security.corespringsecurity.security.handler.FormAuthenticationSuccessHandler;
+import io.security.corespringsecurity.security.manager.CustomAuthorizationManager;
 import io.security.corespringsecurity.security.provider.FormAuthenticationProvider;
+import io.security.corespringsecurity.service.RoleHierarchyService;
+import io.security.corespringsecurity.service.SecurityResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authorization.AuthorizationEventPublisher;
+import org.springframework.security.authorization.SpringAuthorizationEventPublisher;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -31,7 +44,10 @@ public class SecurityConfig {
     private final  FormAuthenticationFailureHandler formAuthenticationFailureHandler;
 
     private final FormAuthenticationProvider formAuthenticationProvider;
+    private final ApplicationContext applicationContext;
 
+    private final RoleHierarchyService roleHierarchyService;
+    private final SecurityResourceService securityResourceService;
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
@@ -52,17 +68,47 @@ public class SecurityConfig {
         formAccessDeniedHandler.setErrorPage("/denied");
         return formAccessDeniedHandler;
     }
-    
+
+    @Bean
+    public RoleHierarchyImpl roleHierarchyImpl() {
+        RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+        return roleHierarchy;
+    }
+
+    @Bean
+    public CustomAuthorizationManager customAuthorizationManager() throws Exception {
+        CustomAuthorizationManager customAuthorizationManager = new CustomAuthorizationManager(securityResourceService);
+        customAuthorizationManager.setRoleHierarchy(roleHierarchyImpl());
+        customAuthorizationManager.setPermitAlls(Arrays.asList(
+                new AntPathRequestMatcher("/"),
+                new AntPathRequestMatcher("/user"),
+                new AntPathRequestMatcher("/login"),
+                new AntPathRequestMatcher("/login_proc"),
+                new AntPathRequestMatcher("/denied"),
+                new AntPathRequestMatcher("/signIn")));
+        return customAuthorizationManager;
+    }
+
+    public CustomAuthorizationFilter customAuthorizationFilter() throws Exception {
+        CustomAuthorizationFilter authorizationFilter = new CustomAuthorizationFilter(customAuthorizationManager());
+        authorizationFilter.setAuthorizationEventPublisher((applicationContext.getBeanNamesForType(AuthorizationEventPublisher.class).length > 0) ? applicationContext.getBean(AuthorizationEventPublisher.class) : new SpringAuthorizationEventPublisher(applicationContext));
+        authorizationFilter.setSecurityContextHolderStrategy(SecurityContextHolder.getContextHolderStrategy());
+        authorizationFilter.setShouldFilterAllDispatcherTypes(true);
+        authorizationFilter.setObserveOncePerRequest(true);
+        return authorizationFilter;
+    }
+    public RoleHierarchyImpl roleInitializer(){
+        RoleHierarchyImpl roleHierarchyImpl = new RoleHierarchyImpl();
+        roleHierarchyImpl.setHierarchy(roleHierarchyService.findAllHierarchy());
+        return roleHierarchyImpl;
+    }
+
     @Bean
     @Order(1)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests()
-                .requestMatchers("/mypage").hasRole("USER")
-                .requestMatchers("/messages").hasRole("MANAGER")
-                .requestMatchers("/config").hasRole("ADMIN")
-                .requestMatchers("/**").permitAll()
-                .anyRequest().authenticated();
+                .anyRequest().permitAll();
 
         http
                 .formLogin()
@@ -79,9 +125,9 @@ public class SecurityConfig {
                 .accessDeniedPage("/denied")
                 .accessDeniedHandler(formAccessDeniedHandler());
 
-
         http
                 .csrf().disable();
+        http.addFilterAfter(customAuthorizationFilter(), AuthorizationFilter.class);
 
         return http.build();
     }
