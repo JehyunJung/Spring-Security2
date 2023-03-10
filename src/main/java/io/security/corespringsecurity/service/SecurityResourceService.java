@@ -3,6 +3,10 @@ package io.security.corespringsecurity.service;
 import io.security.corespringsecurity.domain.entity.Resources;
 import io.security.corespringsecurity.repository.ResourcesRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.authorization.AuthorityAuthorizationManager;
+import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcherEntry;
 import org.springframework.stereotype.Service;
@@ -19,7 +23,9 @@ import java.util.Set;
 public class SecurityResourceService {
     private final ResourcesRepository resourcesRepository;
 
-    List<RequestMatcherEntry<Set<String>>> securityResources=new ArrayList<>();
+    private final RoleHierarchyImpl roleHierarchyImpl;
+
+    List<RequestMatcherEntry<AuthorizationManager<RequestAuthorizationContext>>> securityResources=new ArrayList<>();
 
     public void load() {
         securityResources.clear();
@@ -33,11 +39,13 @@ public class SecurityResourceService {
                             (role) -> {
                                 authoritites.add(role.getRoleName());
                             });
-                    securityResources.add(new RequestMatcherEntry<>(new AntPathRequestMatcher(resource.getResourceName()),authoritites));
+                    AuthorityAuthorizationManager<RequestAuthorizationContext> authorizationManager = AuthorityAuthorizationManager.hasAnyAuthority(authoritites.toArray(new String[0]));
+                    authorizationManager.setRoleHierarchy(roleHierarchyImpl);
+                    securityResources.add(new RequestMatcherEntry<>(new AntPathRequestMatcher(resource.getResourceName()),authorizationManager));
                 }
         );
     }
-    public List<RequestMatcherEntry<Set<String>>> getResourceList() {
+    public List<RequestMatcherEntry<AuthorizationManager<RequestAuthorizationContext>>> getResourceList() {
         return securityResources;
     }
 

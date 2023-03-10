@@ -1,5 +1,6 @@
 package io.security.corespringsecurity.security.configs;
 
+import io.security.corespringsecurity.repository.ResourcesRepository;
 import io.security.corespringsecurity.security.common.FormAuthenticationDetailsSource;
 import io.security.corespringsecurity.security.filter.CustomAuthorizationFilter;
 import io.security.corespringsecurity.security.handler.FormAccessDeniedHandler;
@@ -50,8 +51,7 @@ public class SecurityConfig {
     private final ApplicationContext applicationContext;
 
     private final RoleHierarchyService roleHierarchyService;
-    private final SecurityResourceService securityResourceService;
-
+    private final ResourcesRepository resourcesRepository;
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) ->
@@ -79,9 +79,13 @@ public class SecurityConfig {
     }
 
     @Bean
+    public SecurityResourceService securityResourceService(){
+        return new SecurityResourceService(resourcesRepository, roleHierarchyImpl());
+    }
+
+    @Bean
     public CustomAuthorizationManager customAuthorizationManager() throws Exception {
-        CustomAuthorizationManager customAuthorizationManager = new CustomAuthorizationManager(securityResourceService);
-        customAuthorizationManager.setRoleHierarchy(roleHierarchyImpl());
+        CustomAuthorizationManager customAuthorizationManager = new CustomAuthorizationManager(securityResourceService());
         customAuthorizationManager.setPermitAlls(Arrays.asList(
                 new AntPathRequestMatcher("/"),
                 new AntPathRequestMatcher("/user"),
@@ -94,6 +98,7 @@ public class SecurityConfig {
                 new IpAddressMatcher("192.168.0.0/16")
                 )
         );
+        customAuthorizationManager.setAuthenticatedUrls("**");
 
         return customAuthorizationManager;
     }

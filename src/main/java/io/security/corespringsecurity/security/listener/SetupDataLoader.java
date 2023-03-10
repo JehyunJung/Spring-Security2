@@ -72,6 +72,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         createResourceIfNotFound("/messages", "", managerRoles, "url");
         createResourceIfNotFound("/mypage", "", userRoles, "url");
         Account account = createUserIfNotFound("admin", "pass", "admin@gmail.com", 10,  adminRoles);
+        createUserIfNotFound("user", "1111", "user@gmail.com", 23,  userRoles);
 
         createRoleHierarchyIfNotFound(managerRole, adminRole);
         createRoleHierarchyIfNotFound(userRole, managerRole);
