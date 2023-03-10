@@ -22,6 +22,7 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authorization.AuthorizationEventPublisher;
 import org.springframework.security.authorization.SpringAuthorizationEventPublisher;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -30,11 +31,13 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.IpAddressMatcher;
 
 import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @RequiredArgsConstructor
 @Slf4j
 public class SecurityConfig {
@@ -85,7 +88,13 @@ public class SecurityConfig {
                 new AntPathRequestMatcher("/login"),
                 new AntPathRequestMatcher("/login_proc"),
                 new AntPathRequestMatcher("/denied"),
-                new AntPathRequestMatcher("/signIn")));
+                new AntPathRequestMatcher("/signIn"),
+                new AntPathRequestMatcher("/error")));
+        customAuthorizationManager.setDeniedIps(Arrays.asList(
+                new IpAddressMatcher("192.168.0.0/16")
+                )
+        );
+
         return customAuthorizationManager;
     }
 
@@ -96,11 +105,6 @@ public class SecurityConfig {
         authorizationFilter.setShouldFilterAllDispatcherTypes(true);
         authorizationFilter.setObserveOncePerRequest(true);
         return authorizationFilter;
-    }
-    public RoleHierarchyImpl roleInitializer(){
-        RoleHierarchyImpl roleHierarchyImpl = new RoleHierarchyImpl();
-        roleHierarchyImpl.setHierarchy(roleHierarchyService.findAllHierarchy());
-        return roleHierarchyImpl;
     }
 
     @Bean
