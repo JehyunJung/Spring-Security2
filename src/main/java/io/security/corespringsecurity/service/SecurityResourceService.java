@@ -12,10 +12,7 @@ import org.springframework.security.web.util.matcher.RequestMatcherEntry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -25,10 +22,11 @@ public class SecurityResourceService {
 
     private final RoleHierarchyImpl roleHierarchyImpl;
 
-    List<RequestMatcherEntry<AuthorizationManager<RequestAuthorizationContext>>> securityResources=new ArrayList<>();
+    List<RequestMatcherEntry<AuthorizationManager<RequestAuthorizationContext>>> urlResources=new ArrayList<>();
+    LinkedHashMap<String,List<String>> methodResources=new LinkedHashMap<>();
 
-    public void load() {
-        securityResources.clear();
+    public void loadUrlResources() {
+        urlResources.clear();
 
         List<Resources> allResources = resourcesRepository.findAllResources();
 
@@ -41,12 +39,37 @@ public class SecurityResourceService {
                             });
                     AuthorityAuthorizationManager<RequestAuthorizationContext> authorizationManager = AuthorityAuthorizationManager.hasAnyAuthority(authoritites.toArray(new String[0]));
                     authorizationManager.setRoleHierarchy(roleHierarchyImpl);
-                    securityResources.add(new RequestMatcherEntry<>(new AntPathRequestMatcher(resource.getResourceName()),authorizationManager));
+                    urlResources.add(new RequestMatcherEntry<>(new AntPathRequestMatcher(resource.getResourceName()),authorizationManager));
                 }
         );
     }
-    public List<RequestMatcherEntry<AuthorizationManager<RequestAuthorizationContext>>> getResourceList() {
-        return securityResources;
+    public List<RequestMatcherEntry<AuthorizationManager<RequestAuthorizationContext>>> getUrlResourceList() {
+        return urlResources;
     }
+
+    public void loadMethodResources() {
+        methodResources.clear();
+
+        List<Resources> allResources = resourcesRepository.findAllMethodResources();
+
+        allResources.forEach(
+                (resource)->{
+                    Set < String > authoritites = new HashSet<>();
+                    resource.getRoleSet().forEach(
+                            (role) -> {
+                                authoritites.add(role.getRoleName());
+                            });
+                    AuthorityAuthorizationManager<RequestAuthorizationContext> authorizationManager = AuthorityAuthorizationManager.hasAnyAuthority(authoritites.toArray(new String[0]));
+                    methodResources.put(resource.getResourceName(),new ArrayList<>(authoritites));
+                }
+        );
+    }
+    public LinkedHashMap<String, List<String>> getMethodResourceList() {
+        return methodResources;
+    }
+
+
+
+
 
 }

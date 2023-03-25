@@ -62,7 +62,7 @@ public class CustomAuthorizationManager implements AuthorizationManager<HttpServ
             if(permitMatcher.matches(request))
                 return new AuthorizationDecision(true);
 
-        List<RequestMatcherEntry<AuthorizationManager<RequestAuthorizationContext>>> mappings = securityResourceService.getResourceList();
+        List<RequestMatcherEntry<AuthorizationManager<RequestAuthorizationContext>>> mappings = securityResourceService.getUrlResourceList();
         mappings.addAll(defaultMappings);
 
         for (RequestMatcherEntry<AuthorizationManager<RequestAuthorizationContext>> mapping : mappings) {

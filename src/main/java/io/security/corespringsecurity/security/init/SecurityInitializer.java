@@ -16,7 +16,7 @@ public class SecurityInitializer implements ApplicationRunner {
     private final SecurityResourceService securityResourceService;
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        securityResourceService.load();
+        securityResourceService.loadUrlResources();
         roleHierarchyImpl.setHierarchy(roleHierarchyService.findAllHierarchy());
     }
 }

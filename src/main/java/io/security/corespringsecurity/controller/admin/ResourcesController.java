@@ -52,7 +52,7 @@ public class ResourcesController {
 		resources.setRoleSet(roles);
 
 		resourcesService.createResources(resources);
-		securityResourceService.load();
+		securityResourceService.loadUrlResources();
 
 		return "redirect:/admin/resources";
 	}
@@ -91,7 +91,7 @@ public class ResourcesController {
 
 		Resources resources = resourcesService.getResources(Long.valueOf(id));
 		resourcesService.deleteResources(Long.valueOf(id));
-		securityResourceService.load();
+		securityResourceService.loadUrlResources();
 		return "redirect:/admin/resources";
 	}
 }
